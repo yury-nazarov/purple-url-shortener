@@ -1,3 +1,3 @@
-module github.com/yury-nazarov/purple-url-shortener
+module adv-demo
 
 go 1.26.1
