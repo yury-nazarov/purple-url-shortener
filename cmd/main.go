@@ -1,6 +1,7 @@
 package main
 
 import (
+	"adv-demo/configs"
 	"adv-demo/internal/hello"
 
 	"fmt"
@@ -8,6 +9,8 @@ import (
 )
 
 func main() {
+	conf := configs.LoadConfig()
+
 	router := http.NewServeMux()
 	hello.NewHelloHandler(router)
 
