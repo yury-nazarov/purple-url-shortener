@@ -3,7 +3,6 @@ package main
 import (
 	"adv-demo/configs"
 	"adv-demo/internal/auth"
-	"adv-demo/internal/hello"
 
 	"fmt"
 	"net/http"
@@ -13,7 +12,6 @@ func main() {
 	conf := configs.LoadConfig()
 
 	router := http.NewServeMux()
-	hello.NewHelloHandler(router)
 
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
 		Config: conf,
