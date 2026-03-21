@@ -3,13 +3,30 @@ package auth
 import (
 	"fmt"
 	"net/http"
+
+	"adv-demo/configs"
 )
 
-type AuthHandler struct{}
+// Структура используемачя для передачи зависимости в компонент
+// Набор полей у AuthHandlerDeps и AuthHandler
+// TBD: Выглядит как будто эта структурка может быть приватной
+type AuthHandlerDeps struct {
+	*configs.Config
+}
 
-func NewAuthHandler(router *http.ServeMux) {
-	handler := &AuthHandler{}
-	// Позволяет указать, что хендлер будет обрабатывать только POST
+// Структура используемая для функции конструктора
+// Набор полей у AuthHandlerDeps и AuthHandler
+type AuthHandler struct {
+	*configs.Config
+}
+
+func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
+	handler := &AuthHandler{
+		// Передаем весь конфиг в учебных целях для упрощения.
+		// Иначе было бы достаточно только токена
+		Config: deps.Config,
+	}
+
 	router.HandleFunc("POST /auth/regiser", handler.Register())
 	router.HandleFunc("POST /auth/login", handler.Login())
 }
@@ -22,6 +39,6 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("login for users")
+		fmt.Println("login with secret:", handler.Config.Auth.Secret)
 	}
 }

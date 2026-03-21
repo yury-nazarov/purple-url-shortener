@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"adv-demo/configs"
+	"adv-demo/configs"
 	"adv-demo/internal/auth"
 	"adv-demo/internal/hello"
 
@@ -10,13 +10,14 @@ import (
 )
 
 func main() {
-	//conf := configs.LoadConfig()
+	conf := configs.LoadConfig()
 
 	router := http.NewServeMux()
 	hello.NewHelloHandler(router)
-	// Сделать Auth модуль
-	// Добавить два хендлера /auth/register, /auth/login
-	auth.NewAuthHandler(router)
+
+	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
+		Config: conf,
+	})
 
 	server := http.Server{
 		Addr:    ":8081",
