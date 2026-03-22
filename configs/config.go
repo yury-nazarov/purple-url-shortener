@@ -7,30 +7,38 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Config struct {
-	Db   DbConfig
-	Auth AuthConfig
+type сonfig struct {
+	Db   dbConfig
+	Auth authConfig
 }
 
-type DbConfig struct {
+type dbConfig struct {
 	Dsn string
 }
 
-type AuthConfig struct {
+type authConfig struct {
 	Secret string
 }
 
-func LoadConfig() *Config {
+func LoadConfig() *сonfig {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error loading .env file, using default config")
 	}
-	return &Config{
-		Db: DbConfig{
+	return &сonfig{
+		Db: dbConfig{
 			Dsn: os.Getenv("DSN"),
 		},
-		Auth: AuthConfig{
+		Auth: authConfig{
 			Secret: os.Getenv("TOKEN"),
 		},
 	}
+}
+
+func (c *сonfig) GetAuthSecret() string {
+	return c.Auth.Secret
+}
+
+func (c *сonfig) GetDbConfig() string {
+	return c.Db.Dsn
 }
