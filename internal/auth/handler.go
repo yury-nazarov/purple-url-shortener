@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"adv-demo/configs"
+	"adv-demo/pkg/res"
 )
 
 // Структура используемачя для передачи зависимости в компонент
@@ -32,6 +32,10 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	router.HandleFunc("POST /auth/login", handler.Login())
 }
 
+// Разберем подробно, так как быбло не очевидно.
+// Функция Register() возвращает функцию типа HandlerFunc - а точнее замыкание, которое реализует ее интерфейс.
+// В момент возврата, анонимная функция не выполняется
+// Она будет выполнена, когда дернут за ручку
 func (handler *AuthHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("registeration new user")
@@ -40,11 +44,9 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		res := LoginResponse{
+		data := LoginResponse{
 			Token: handler.Config.Auth.Secret,
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(res)
+		res.Json(w, data, 200)
 	}
 }
