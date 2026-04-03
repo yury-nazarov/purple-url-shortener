@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
+	"net/mail"
 
 	"adv-demo/configs"
 	"adv-demo/pkg/res"
@@ -61,12 +61,12 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			res.Json(w, "Password required", 402)
 			return
 		}
-		reg, _ := regexp.Compile(`[A-Za-z0-9\._%+\-]+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,}`)
-		if !reg.MatchString(payload.Email) {
+		mailAddress, err := mail.ParseAddress(payload.Email)
+		if err != nil {
 			res.Json(w, "Wrong Email", 402)
 			return
 		}
-		fmt.Println(payload.Email)
+		fmt.Println(mailAddress.Address, mailAddress.Name)
 		data := LoginResponse{
 			Token: handler.Config.Auth.Secret,
 		}
