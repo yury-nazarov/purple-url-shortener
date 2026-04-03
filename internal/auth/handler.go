@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/mail"
 
 	"adv-demo/configs"
 	"adv-demo/pkg/res"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // Структура используемачя для передачи зависимости в компонент
@@ -53,20 +54,13 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			res.Json(w, err.Error(), 402)
 			return
 		}
-		if payload.Email == "" {
-			res.Json(w, "Email required", 402)
-			return
-		}
-		if payload.Password == "" {
-			res.Json(w, "Password required", 402)
-			return
-		}
-		mailAddress, err := mail.ParseAddress(payload.Email)
+		validate := validator.New()
+		err = validate.Struct(payload)
 		if err != nil {
-			res.Json(w, "Wrong Email", 402)
+			res.Json(w, err.Error, 402)
 			return
 		}
-		fmt.Println(mailAddress.Address, mailAddress.Name)
+
 		data := LoginResponse{
 			Token: handler.Config.Auth.Secret,
 		}
