@@ -1,19 +1,14 @@
 package auth
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"adv-demo/configs"
-	"adv-demo/pkg/res"
-
-	"github.com/go-playground/validator/v10"
+	"adv-demo/pkg/req"
 )
 
 // Структура используемачя для передачи зависимости в компонент
 // Набор полей у AuthHandlerDeps и AuthHandler
-// TBD: Выглядит как будто эта структурка может быть приватной
 type AuthHandlerDeps struct {
 	*configs.Config
 }
@@ -40,30 +35,20 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 // В момент возврата, анонимная функция не выполняется
 // Она будет выполнена, когда дернут за ручку
 func (handler *AuthHandler) Register() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("registeration new user")
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, err := req.HandleBody[RegisterRequest](&w, r)
+		if err == nil {
+			return
+		}
 	}
 }
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		// Прочитать Body
-		var payload LoginRequest
-		err := json.NewDecoder(req.Body).Decode(&payload)
+	return func(w http.ResponseWriter, r *http.Request) {
+		// TBD: Добавить валидацию
+		_, err := req.HandleBody[LoginRequest](&w, r)
 		if err != nil {
-			res.Json(w, err.Error(), 402)
 			return
 		}
-		validate := validator.New()
-		err = validate.Struct(payload)
-		if err != nil {
-			res.Json(w, err.Error, 402)
-			return
-		}
-
-		data := LoginResponse{
-			Token: handler.Config.Auth.Secret,
-		}
-		res.Json(w, data, 200)
 	}
 }
