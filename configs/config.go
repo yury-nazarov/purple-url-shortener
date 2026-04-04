@@ -21,6 +21,7 @@ type AuthConfig struct {
 }
 
 func LoadConfig() *Config {
+	// Пакет godotenv читает пары «ключ‑значение» из файла .env и устанавливает их как переменные окружения процесса (не системы в целом).
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error loading .env file, using default config")
