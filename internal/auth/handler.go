@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 
 	"adv-demo/configs"
@@ -15,27 +14,28 @@ import (
 // Набор полей у AuthHandlerDeps и AuthHandler
 type AuthHandlerDeps struct {
 	*configs.Config
+	Store Store
 }
 
 // Структура используемая для функции конструктора
 // Набор полей у AuthHandlerDeps и AuthHandler
 type AuthHandler struct {
 	*configs.Config
-	store map[string]string
+	// TODO: Заменить на db и поправить в ручка
+	store Store
 }
 
 func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	handler := &AuthHandler{
-		// Передаем весь конфиг в учебных целях для упрощения.
-		// Иначе было бы достаточно только токена
+		// Передаем весь конфиг в учебных целях для упрощения. Иначе достаточно только токена
 		Config: deps.Config,
-		store:  make(map[string]string),
+		store:  deps.Store,
 	}
 
 	router.HandleFunc("POST /auth/regiser", handler.Register())
 	router.HandleFunc("POST /auth/login", handler.Login())
 	router.HandleFunc("POST /send", handler.SendEmail())
-	router.HandleFunc("GET /verify/{hash}", handler.VerifyHash())
+	router.HandleFunc("GET /verify/{hash}", handler.ValidateHash())
 }
 
 // Разберем подробно, так как быбло не очевидно.
@@ -86,7 +86,7 @@ func (handler *AuthHandler) SendEmail() http.HandlerFunc {
 			Hash:         userHash,
 		}
 		// Сохраняем пару для проверки
-		handler.store[userHash] = body.Email
+		handler.store.Add(userHash, body.Email)
 
 		// Отправляем ссылку о подтверждении регистрации пользователю
 		err = mailer.Send(user)
@@ -97,16 +97,14 @@ func (handler *AuthHandler) SendEmail() http.HandlerFunc {
 	}
 }
 
-func (handler *AuthHandler) VerifyHash() http.HandlerFunc {
-	// TODO: В mail.ru вместо нормального хеша приходит какая то херня
+func (handler *AuthHandler) ValidateHash() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hash := r.PathValue("hash")
-		value, ok := handler.store[hash]
-		if ok {
-			fmt.Printf("INFO: email %s was conferm:", value)
-		} else {
-			fmt.Println("ERROR: email not found")
+		if handler.store.Validate(hash) {
+			res.Json(w, true, 200)
+			return
 		}
-
+		res.Json(w, false, 200)
+		return
 	}
 }
