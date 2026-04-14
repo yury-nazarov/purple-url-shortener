@@ -1,7 +1,10 @@
 # URL Shortener
 
 
-Установка зависимостей
-```
-go get github.com/joho/godotenv
-```
+- go mod init
+- go mod tidy
+- go get <dependency>
+
+
+## Прочее
+- [Выбор ORM](https://github.com/d-tsuji/awesome-go-orms)
