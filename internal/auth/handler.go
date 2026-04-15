@@ -4,30 +4,38 @@ import (
 	"net/http"
 
 	"adv-demo/configs"
+	self_hash "adv-demo/pkg/hash"
+	"adv-demo/pkg/mailer"
 	"adv-demo/pkg/req"
+	"adv-demo/pkg/res"
 )
 
 // Структура используемачя для передачи зависимости в компонент
 // Набор полей у AuthHandlerDeps и AuthHandler
 type AuthHandlerDeps struct {
 	*configs.Config
+	Store Store
 }
 
 // Структура используемая для функции конструктора
 // Набор полей у AuthHandlerDeps и AuthHandler
 type AuthHandler struct {
 	*configs.Config
+	// TODO: Заменить на db и поправить в ручка
+	store Store
 }
 
 func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	handler := &AuthHandler{
-		// Передаем весь конфиг в учебных целях для упрощения.
-		// Иначе было бы достаточно только токена
+		// Передаем весь конфиг в учебных целях для упрощения. Иначе достаточно только токена
 		Config: deps.Config,
+		store:  deps.Store,
 	}
 
 	router.HandleFunc("POST /auth/regiser", handler.Register())
 	router.HandleFunc("POST /auth/login", handler.Login())
+	router.HandleFunc("POST /send", handler.SendEmail())
+	router.HandleFunc("GET /verify/{hash}", handler.ValidateHash())
 }
 
 // Разберем подробно, так как быбло не очевидно.
@@ -50,5 +58,53 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		if err != nil {
 			return
 		}
+	}
+}
+
+func (handler *AuthHandler) SendEmail() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Принимает email и валидирует его
+		body, err := req.HandleBody[SendRequest](&w, r)
+		if err != nil {
+			return
+		}
+		// Готовим хеш
+		userHash, err := self_hash.Gen(body.Email)
+		if err != nil {
+			res.Json(w, "Hash generate Internal error", 500)
+			return
+		}
+
+		// Формируем информацию о пользователе
+		// В будущем будем брать ее из БД
+		user := mailer.UserInfo{
+			Name:         "Yury",
+			Email:        body.Email,
+			EmailPasword: "31pHOmYwf1HhV7o7kcI7",
+			SmtpServer:   "smtp.mail.ru",
+			SmtpPort:     "587",
+			Hash:         userHash,
+		}
+		// Сохраняем пару для проверки
+		handler.store.Add(userHash, body.Email)
+
+		// Отправляем ссылку о подтверждении регистрации пользователю
+		err = mailer.Send(user)
+		if err != nil {
+			res.Json(w, "ERROR: Mailer has problem", 500)
+			return
+		}
+	}
+}
+
+func (handler *AuthHandler) ValidateHash() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		hash := r.PathValue("hash")
+		if handler.store.Validate(hash) {
+			res.Json(w, true, 200)
+			return
+		}
+		res.Json(w, false, 200)
+		return
 	}
 }
