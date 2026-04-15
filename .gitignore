@@ -1,3 +1,4 @@
 .vscode/
 /postgres-data/
 /data
+# .env # Исключительно в учебных целях
