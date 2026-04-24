@@ -3,6 +3,7 @@ package main
 import (
 	"adv-demo/configs"
 	"adv-demo/internal/auth"
+	"adv-demo/internal/link"
 	"adv-demo/pkg/db"
 
 	"fmt"
@@ -11,11 +12,18 @@ import (
 
 func main() {
 	conf := configs.LoadConfig()
-	_ = db.New(conf)
+	db := db.New(conf)
 	router := http.NewServeMux()
 
+	// Repository
+	linlRepository := link.NewLinkRepository(db)
+
+	// Handlers
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
 		Config: conf,
+	})
+	link.NewLinkHandler(router, link.LinkHandlerDeps{
+		LinkRepository: linlRepository,
 	})
 
 	server := http.Server{
