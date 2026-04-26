@@ -1,6 +1,10 @@
 package link
 
-import "net/http"
+import (
+	"adv-demo/pkg/req"
+	"adv-demo/pkg/res"
+	"net/http"
+)
 
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
@@ -24,7 +28,20 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 }
 
 func (handler *LinkHandler) Create() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := req.HandleBody[LinkCreateRequest](&w, r)
+		if err != nil {
+			return
+		}
+		// TODO: Гипотетически может быть коллизия.
+		link := NewLink(body.Url)
+		createdLink, err := handler.LinkRepository.Create(link)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		res.Json(w, createdLink, 201)
+	}
 }
 
 func (handler *LinkHandler) Update() http.HandlerFunc {

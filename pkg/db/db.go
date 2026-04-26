@@ -10,7 +10,7 @@ import (
 )
 
 type Db struct {
-	db *gorm.DB
+	DB *gorm.DB
 }
 
 func New(config *configs.Config) *Db {
@@ -22,6 +22,6 @@ func New(config *configs.Config) *Db {
 	}
 	fmt.Println("INFO: Соединение с БД установлено")
 	return &Db{
-		db: db,
+		DB: db,
 	}
 }
