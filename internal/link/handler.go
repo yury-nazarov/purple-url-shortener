@@ -23,7 +23,7 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	router.HandleFunc("POST /link", handler.Create())
 	router.HandleFunc("PATCH /link/{id}", handler.Update())
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
-	router.HandleFunc("GET /{alias}", handler.GoTo())
+	router.HandleFunc("GET /{hash}", handler.GoTo())
 
 }
 
@@ -52,6 +52,15 @@ func (handler *LinkHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
+// Вернет ссылку и редирект
 func (handler *LinkHandler) GoTo() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Получаем хеш из запроса
+		hash := r.PathValue("hash")
+		link, err := handler.LinkRepository.GetByHash(hash)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		}
+		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
+	}
 }
