@@ -2,3 +2,7 @@
 /postgres-data/
 /data
 # .env # Исключительно в учебных целях
+
+# drawio docs
+*.bkp
+*.dtmp
